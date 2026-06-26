@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบพิมพ์บาร์โค้ดสมาชิก</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.1.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.1.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+    <div class="header">
+        <h1>ระบบสร้างบาร์โค้ดสมาชิก (ดึงจาก Sheets)</h1>
+        <button id="sync-btn" onclick="fetchAndGenerate()">ดึงข้อมูลและสร้างบาร์โค้ด</button>
+    </div>
+
+    <div id="card-container" class="grid-container"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
