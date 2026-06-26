@@ -3,153 +3,231 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบพิมพ์บาร์โค้ดสมาชิก - โรงเรียนบ้านหาดส้มแป้น</title>
-    
+    <title>ระบบคิดเงินสหกรณ์ - โรงเรียนบ้านหาดส้มแป้น</title>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
-    
-    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
     
     <script src="https://www.gstatic.com/firebasejs/10.1.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.1.0/firebase-firestore-compat.js"></script>
 
     <style>
-        /* ธีมสี น้ำเงิน(หลัก) - แดง(เน้น) - ขาว(พื้นหลัง) */
         :root {
             --primary-blue: #1A365D;
             --accent-red: #E53E3E;
             --bg-white: #FFFFFF;
             --bg-gray: #F7FAFC;
             --text-dark: #2D3748;
-            --text-gray: #718096;
+            --border-color: #E2E8F0;
         }
 
         body {
             font-family: 'Kanit', sans-serif;
             background-color: var(--bg-gray);
-            color: var(--text-dark);
             margin: 0;
-            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
         }
 
-        /* ส่วนหัวของหน้าเว็บ */
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-            padding: 20px;
+        .navbar {
+            background-color: var(--primary-blue);
+            width: 100%;
+            padding: 15px 30px;
+            color: var(--bg-white);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .navbar h1 { margin: 0; font-size: 1.5rem; }
+        
+        .admin-link {
+            color: var(--bg-white);
+            text-decoration: none;
+            font-weight: 300;
+            padding: 8px 16px;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 6px;
+            transition: 0.3s;
+        }
+        .admin-link:hover { background-color: rgba(255,255,255,0.1); }
+
+        .main-container {
+            width: 100%;
+            max-width: 900px;
+            margin-top: 30px;
+            padding: 0 20px;
+            box-sizing: border-box;
+        }
+
+        .pos-card {
             background-color: var(--bg-white);
             border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            padding: 30px;
             border-top: 5px solid var(--primary-blue);
         }
 
-        .header h1 {
-            margin: 0 0 15px 0;
-            color: var(--primary-blue);
-            font-size: 1.8rem;
+        /* กล่องเลือกวันที่สำหรับบันทึกย้อนหลัง */
+        .date-selector {
+            background-color: #FFF5F5;
+            border: 1px solid #FEB2B2;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .date-selector label {
+            font-weight: 500;
+            color: var(--accent-red);
+        }
+        .date-selector input[type="date"] {
+            font-family: 'Kanit', sans-serif;
+            font-size: 1.1rem;
+            padding: 8px 12px;
+            border: 1px solid #CBD5E0;
+            border-radius: 6px;
+            outline: none;
         }
 
-        .btn-sync {
-            padding: 12px 24px;
-            background-color: var(--primary-blue);
-            color: var(--bg-white);
+        .scan-section {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        .scan-section label {
+            font-size: 1.2rem;
+            font-weight: 500;
+            color: var(--primary-blue);
+        }
+
+        #barcode-input {
+            width: 100%;
+            padding: 18px;
+            font-size: 1.5rem;
+            font-family: 'Kanit', sans-serif;
+            border: 2px solid var(--primary-blue);
+            border-radius: 8px;
+            outline: none;
+            box-sizing: border-box;
+            transition: 0.3s;
+        }
+
+        #barcode-input:focus {
+            box-shadow: 0 0 0 3px rgba(26, 54, 93, 0.2);
+        }
+
+        .member-info {
+            background-color: #EBF8FF;
+            border: 1px solid #BEE3F8;
+            color: #2B6CB0;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            display: none;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 15px;
+            border-bottom: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        th {
+            background-color: var(--bg-gray);
+            color: var(--text-dark);
+            font-weight: 500;
+        }
+
+        .text-right { text-align: right; }
+
+        .total-row td {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--accent-red);
+            border-bottom: none;
+            padding-top: 25px;
+        }
+
+        .btn-checkout {
+            width: 100%;
+            padding: 18px;
+            margin-top: 25px;
+            background-color: var(--accent-red);
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 600;
+            font-family: 'Kanit', sans-serif;
             border: none;
             border-radius: 8px;
             cursor: pointer;
-            font-size: 1.1rem;
-            font-weight: 500;
-            font-family: 'Kanit', sans-serif;
-            transition: background-color 0.3s, transform 0.1s;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: 0.3s;
         }
 
-        .btn-sync:hover {
-            background-color: #2B6CB0;
-        }
-        
-        .btn-sync:active {
-            transform: scale(0.98);
-        }
-
-        /* เลย์เอาต์แสดงบัตรสมาชิก (Grid) */
-        .grid-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 25px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        /* ดีไซน์บัตรสมาชิก (Pixel-perfect) */
-        .member-card {
-            background: var(--bg-white);
-            padding: 25px 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            text-align: center;
-            border-top: 4px solid var(--accent-red);
-            transition: transform 0.3s;
-        }
-
-        .member-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 15px rgba(0,0,0,0.1);
-        }
-
-        .member-card h3 {
-            margin: 0 0 5px 0;
-            font-size: 1.3rem;
-            color: var(--primary-blue);
-        }
-
-        .member-card p {
-            margin: 0 0 20px 0;
-            color: var(--text-gray);
-            font-size: 1rem;
-        }
-
-        .barcode-svg {
-            max-width: 100%;
-            height: auto;
-        }
-
-        #status-message {
-            margin-top: 15px;
-            font-size: 1rem;
-            color: var(--accent-red);
-        }
-
-        /* CSS สำหรับโหมดสั่งปริ้นท์ (Ctrl+P) */
-        @media print {
-            .header { display: none; }
-            body { background: white; padding: 0; }
-            .grid-container {
-                display: block; /* ยกเลิก Grid เปลี่ยนเป็นเรียงลงมาปกติ */
-            }
-            .member-card {
-                box-shadow: none;
-                border: 1px solid #E2E8F0;
-                border-top: 4px solid var(--accent-red);
-                page-break-inside: avoid;
-                margin-bottom: 20px;
-                width: 45%; /* ให้ปริ้นท์ได้ 2 ใบต่อ 1 แถวบนหน้า A4 */
-                display: inline-block;
-                margin-right: 2%;
-            }
-        }
+        .btn-checkout:hover { background-color: #C53030; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <h1>ระบบพิมพ์บาร์โค้ดสมาชิก</h1>
-        <button class="btn-sync" onclick="fetchAndGenerate()">ดึงข้อมูลจาก Sheets และสร้างบาร์โค้ด</button>
-        <div id="status-message"></div>
-    </div>
+    <header class="navbar">
+        <h1>ระบบสหกรณ์โรงเรียน (คีย์ข้อมูลย้อนหลัง)</h1>
+        <a href="admin.html" class="admin-link">⚙️ ตั้งค่า (Admin)</a>
+    </header>
 
-    <div id="card-container" class="grid-container"></div>
+    <main class="main-container">
+        <div class="pos-card">
+            
+            <div class="date-selector">
+                <label for="transaction-date">📅 เลือกวันที่ทำรายการ:</label>
+                <input type="date" id="transaction-date">
+            </div>
+
+            <div class="scan-section">
+                <label id="input-label">1. สแกนรหัสนักเรียน (4 หลัก)</label>
+                <input type="text" id="barcode-input" placeholder="ยิงบาร์โค้ดที่นี่..." autofocus autocomplete="off">
+            </div>
+
+            <div id="member-display" class="member-info">
+                <span id="member-name-text">ชื่อนักเรียน: -</span>
+                <button onclick="resetPOS()" style="padding: 5px 10px; border-radius: 4px; border:none; cursor:pointer;">ยกเลิก</button>
+            </div>
+
+            <table id="cart-table">
+                <thead>
+                    <tr>
+                        <th>รายการ</th>
+                        <th class="text-right">ราคา (บาท)</th>
+                    </tr>
+                </thead>
+                <tbody id="cart-body"></tbody>
+                <tfoot>
+                    <tr class="total-row">
+                        <td>ยอดรวมทั้งสิ้น</td>
+                        <td class="text-right" id="total-price">0.00</td>
+                    </tr>
+                </tfoot>
+            </table>
+
+            <button class="btn-checkout" id="btn-checkout" onclick="checkout()">บันทึกข้อมูล</button>
+
+        </div>
+    </main>
 
     <script>
-        // 1. ตั้งค่า Firebase Configuration ของคุณ
         const firebaseConfig = {
             apiKey: "AIzaSyAYaXrrNOCRbC7uDVc4tXHMDQcSiwswxoo",
             authDomain: "school-cooperative-system.firebaseapp.com",
@@ -158,83 +236,109 @@
             messagingSenderId: "383328934393",
             appId: "1:383328934393:web:0a326b1e0098b7d6cf4528"
         };
-
-        // 2. เริ่มต้นเชื่อมต่อ Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // 3. URL ของ Google Apps Script (ท่อส่งข้อมูล JSON)
-        const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbwHj-Igmnm99WoxgskAc4-0NmyjsC6r6gC83AX0_f1n_nIWmLYQ0dR30F8xDJBTmEvdNw/exec";
+        let currentMemberId = null; 
+        let totalAmount = 0;
 
-        // ฟังก์ชันหลักที่ทำงานเมื่อกดปุ่ม
-        async function fetchAndGenerate() {
-            const container = document.getElementById('card-container');
-            const statusMsg = document.getElementById('status-message');
-            
-            container.innerHTML = ""; 
-            statusMsg.style.color = "#2B6CB0";
-            statusMsg.innerHTML = "กำลังดึงข้อมูลจาก Google Sheets และซิงค์ลง Firebase...";
+        const barcodeInput = document.getElementById('barcode-input');
+        const inputLabel = document.getElementById('input-label');
+        const memberDisplay = document.getElementById('member-display');
+        const memberNameText = document.getElementById('member-name-text');
+        const cartBody = document.getElementById('cart-body');
+        const totalPriceElement = document.getElementById('total-price');
+        const dateInput = document.getElementById('transaction-date');
 
-            try {
-                // ดึงข้อมูล JSON
-                const response = await fetch(SHEET_API_URL);
-                const members = await response.json();
-                
-                let successCount = 0;
+        // ตั้งค่าเริ่มต้นของช่องวันที่ให้เป็น "วันปัจจุบัน"
+        const today = new Date();
+        // ปรับฟอร์แมตให้รองรับ Input type="date" (YYYY-MM-DD)
+        const localISO = new Date(today.getTime() - (today.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+        dateInput.value = localISO;
 
-                // วนลูปสร้างการ์ดทีละคน
-                members.forEach(member => {
-                    // ตรวจสอบว่ามีรหัสสมาชิกหรือไม่
-                    if (member.member_id && member.member_id !== "") {
-                        
-                        // ก. สร้างโครงสร้าง HTML ของบัตร
-                        const card = document.createElement('div');
-                        card.className = 'member-card';
-                        card.innerHTML = `
-                            <h3>${member.name || 'ไม่ระบุชื่อ'}</h3>
-                            <p>ชั้น: ${member.class || '-'}</p>
-                            <svg id="barcode-${member.member_id}" class="barcode-svg"></svg>
-                        `;
-                        container.appendChild(card);
-
-                        // ข. สั่งไลบรารี JsBarcode ให้วาดบาร์โค้ด
-                        JsBarcode(`#barcode-${member.member_id}`, member.member_id.toString(), {
-                            format: "CODE128",
-                            lineColor: "#1A365D", // ให้สีบาร์โค้ดเป็นสีน้ำเงินเข้ม
-                            width: 2.5,
-                            height: 60,
-                            displayValue: true,
-                            font: "Kanit",
-                            fontSize: 18,
-                            margin: 10
-                        });
-
-                        // ค. นำข้อมูลไปเก็บใน Firebase Firestore แบบ Real-time
-                        db.collection("members").doc(member.member_id.toString()).set({
-                            name: member.name || '',
-                            class: member.class || '',
-                            shares: 0, 
-                            total_buy_accumulated: 0 
-                        }, { merge: true }) // merge: true ป้องกันการลบข้อมูลยอดเงินสะสมเดิมหากมีการดึงซ้ำ
-                        .then(() => {
-                            console.log("บันทึกข้อมูลสมาชิก " + member.member_id + " สำเร็จ");
-                        })
-                        .catch((error) => {
-                            console.error("Firebase Error:", error);
-                        });
-
-                        successCount++;
-                    }
-                });
-
-                statusMsg.style.color = "#38A169"; // สีเขียวแจ้งเตือนสำเร็จ
-                statusMsg.innerHTML = `ดึงข้อมูลและสร้างบาร์โค้ดสำเร็จจำนวน ${successCount} รายการ <br><span style="font-size:0.9rem; color:#718096;">(สามารถกด Ctrl+P เพื่อสั่งปริ้นท์ได้เลย)</span>`;
-
-            } catch (error) {
-                console.error("เกิดข้อผิดพลาดในการดึงข้อมูล: ", error);
-                statusMsg.style.color = "var(--accent-red)";
-                statusMsg.innerHTML = "เกิดข้อผิดพลาด: ไม่สามารถเชื่อมต่อกับ Google Sheets ได้ โปรดตรวจสอบ URL หรือสิทธิ์การเข้าถึง";
+        barcodeInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const scanValue = barcodeInput.value.trim();
+                if (scanValue !== "") {
+                    processScan(scanValue);
+                }
+                barcodeInput.value = ''; 
             }
+        });
+
+        async function processScan(value) {
+            if (currentMemberId === null) {
+                inputLabel.innerText = "กำลังค้นหารหัสนักเรียน...";
+                try {
+                    const doc = await db.collection("members").doc(value).get();
+                    if (doc.exists) {
+                        const memberData = doc.data();
+                        currentMemberId = value;
+                        memberNameText.innerText = `ด.ช./ด.ญ. ${memberData.name} (${memberData.class})`;
+                        memberDisplay.style.display = "flex";
+                        
+                        inputLabel.innerText = "2. สแกนบาร์โค้ดราคาสินค้า (5, 10, 20...)";
+                        inputLabel.style.color = "#E53E3E"; 
+                    } else {
+                        alert("ไม่พบรหัสนักเรียนนี้ในระบบ กรุณาลองใหม่");
+                        inputLabel.innerText = "1. สแกนรหัสนักเรียน (4 หลัก)";
+                    }
+                } catch (error) {
+                    console.error("Error:", error);
+                }
+            } else {
+                const price = parseFloat(value);
+                if (!isNaN(price) && price > 0) {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>สินค้าราคา ${price} บาท</td>
+                        <td class="text-right">${price.toFixed(2)}</td>
+                    `;
+                    cartBody.appendChild(tr);
+
+                    totalAmount += price;
+                    totalPriceElement.innerText = totalAmount.toFixed(2);
+                } else {
+                    alert("รูปแบบบาร์โค้ดราคาไม่ถูกต้อง");
+                }
+            }
+        }
+
+        function checkout() {
+            const selectedDate = dateInput.value;
+            if (!selectedDate) {
+                alert("กรุณาระบุวันที่ทำรายการให้ถูกต้อง");
+                return;
+            }
+            if (currentMemberId === null) {
+                alert("กรุณาสแกนรหัสนักเรียนก่อนทำรายการ");
+                barcodeInput.focus();
+                return;
+            }
+            if (totalAmount === 0) {
+                alert("ยังไม่มีสินค้าในตะกร้า");
+                barcodeInput.focus();
+                return;
+            }
+
+            // ในขั้นตอนนี้ เราจะเอาค่า selectedDate และ totalAmount ไปยิงเข้า Google Sheets ต่อไป
+            alert(`บันทึกยอดขายของวันที่: ${selectedDate} \nรหัสสมาชิก: ${currentMemberId}\nยอดรวม: ${totalAmount} บาท\nสำเร็จ!`);
+            
+            resetPOS();
+        }
+
+        function resetPOS() {
+            currentMemberId = null;
+            totalAmount = 0;
+            
+            memberDisplay.style.display = "none";
+            cartBody.innerHTML = "";
+            totalPriceElement.innerText = "0.00";
+            
+            inputLabel.innerText = "1. สแกนรหัสนักเรียน (4 หลัก)";
+            inputLabel.style.color = "var(--primary-blue)";
+            
+            barcodeInput.focus();
         }
     </script>
 </body>
